@@ -6,7 +6,7 @@ edition = "2021"
 
 [dependencies]
 ink = { version = "4.0.1", default-features = false }
-openbrush  = { path = "../../../openbrush-contracts", default-features = false, features = ["psp22", "psp37"] }
+openbrush  = { path = "../../../openbrush-contracts", default-features = false, features = ["ownable", "psp22", "psp37"] }
 
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2.3", default-features = false, features = ["derive"], optional = true }

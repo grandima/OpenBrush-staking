@@ -1,9 +1,15 @@
 
-
 #[openbrush::contract]
 mod staking_token {
     use openbrush::{
-        contracts::psp22::extensions::metadata::*,
+        contracts::{
+            ownable::*,
+            psp22::extensions::{
+                metadata::*, 
+                mintable::*
+            }
+        },
+        modifiers,
         traits::{
             Storage,
             String
@@ -14,13 +20,17 @@ mod staking_token {
     
     impl PSP22Metadata for StakingToken {}
 
+    impl Ownable for StakingToken {}
+
     #[ink(storage)]
     #[derive(Storage, Default)]
     pub struct StakingToken {
         #[storage_field]
         psp22: psp22::Data,
         #[storage_field]
-        metadata: metadata::Data
+        metadata: metadata::Data,
+        #[storage_field]
+        ownable: ownable::Data,
     }
 
     impl StakingToken {
@@ -33,9 +43,19 @@ mod staking_token {
             contract.metadata.decimals = decimals;
             let initial_supply = 1_000_000_000 * (10 as u128).pow(decimals as u32);
             contract.psp22.supply = initial_supply;
-            assert!(contract._mint_to(staking_account, initial_supply * 70 / 100).is_ok());
-            assert!(contract._mint_to(Self::env().caller(), initial_supply * 30 / 100).is_ok());
+            contract._init_with_owner(Self::env().caller());
+            assert!(contract.mint(staking_account, initial_supply * 70 / 100).is_ok());
+            assert!(contract.mint(Self::env().caller(), initial_supply * 30 / 100).is_ok());
             contract
+        }
+    }
+
+    impl PSP22Mintable for StakingToken {
+        /// override the `mint` function to add the `only_owner` modifier
+        #[ink(message)]
+        #[modifiers(only_owner)]
+        fn mint(&mut self, account: AccountId, amount: Balance) -> Result<(), PSP22Error> {
+            self._mint_to(account, amount)
         }
     }
 }

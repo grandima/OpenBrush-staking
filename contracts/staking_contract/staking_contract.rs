@@ -13,19 +13,18 @@ mod staking_token {
     const DAY_SECONDS: u128 = 60 * 60 * 24;
 
     #[ink(storage)]
-    #[derive(Storage, Default)]
+    #[derive(Storage)]
     pub struct StakingContract {
-        staking_token: AccountId,
-        mapping: Mapping<AccountId, ()>
+        token_addr: AccountId
     }
 
     impl StakingContract {
         #[ink(constructor)]
         pub fn new(staking_token: AccountId) -> Self {
-            Self {staking_token: staking_token}
+            Self {token_addr: staking_token}
         }
         #[ink(message)]
-        pub fn stake(&self, amount: Balance) {
+        pub fn stake(&self, amount: AccountId) {
 
         }
     }
