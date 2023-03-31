@@ -48,6 +48,12 @@ mod staking_token {
             assert!(contract.mint(Self::env().caller(), initial_supply * 30 / 100).is_ok());
             contract
         }
+        #[ink(message)]
+        #[modifiers(only_owner)]
+        pub fn mint_to_staking_acc(&mut self, account: AccountId) -> Result<(), PSP22Error> {
+            let supply = (self.psp22.supply as Balance) * 70 / 100;
+            self.mint(account, supply as Balance)
+        }
     }
 
     impl PSP22Mintable for StakingToken {
