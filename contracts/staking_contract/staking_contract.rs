@@ -56,6 +56,9 @@ mod staking_contract {
             if amount == 0 {
                 return Err(Error::AmountToStakeIsZero);
             }
+            if self._can_stake() {
+
+            }
             let token = self.token_addr;
             let from = self.env().caller();
             let to = self.env().account_id();
@@ -140,7 +143,7 @@ mod staking_contract {
             self.stake_info.get(&account_id).unwrap_or(Record::default())
         }
         fn _can_stake(&self, amount: Balance) -> bool {
-            amount / self.available_reward_amount == 0
+            self.available_reward_amount >= amount
         }
     }
     // impl Into<Error> for PSP22Error {
