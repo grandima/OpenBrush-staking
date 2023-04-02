@@ -56,7 +56,7 @@ mod staking_contract {
             if amount == 0 {
                 return Err(Error::AmountToStakeIsZero);
             }
-            if self._can_stake() {
+            if self._can_stake(amount) {
 
             }
             let token = self.token_addr;
