@@ -1,6 +1,6 @@
 
 #[openbrush::contract]
-mod staking_token {
+mod token {
     use openbrush::{
         contracts::{
             ownable::*,
@@ -16,15 +16,15 @@ mod staking_token {
         }
     };
 
-    impl PSP22 for StakingToken {}
+    impl PSP22 for Token {}
     
-    impl PSP22Metadata for StakingToken {}
+    impl PSP22Metadata for Token {}
 
-    impl Ownable for StakingToken {}
+    impl Ownable for Token {}
 
     #[ink(storage)]
     #[derive(Storage, Default)]
-    pub struct StakingToken {
+    pub struct Token {
         #[storage_field]
         psp22: psp22::Data,
         #[storage_field]
@@ -33,9 +33,9 @@ mod staking_token {
         ownable: ownable::Data,
     }
 
-    impl StakingToken {
+    impl Token {
         #[ink(constructor)]
-        pub fn new(name: Option<String>, symbol: Option<String>, staking_account: AccountId) -> Self {
+        pub fn new(name: Option<String>, symbol: Option<String>) -> Self {
             let mut contract = Self::default();
             contract.metadata.name = name;
             contract.metadata.symbol = symbol;
@@ -44,19 +44,18 @@ mod staking_token {
             let initial_supply = 1_000_000_000 * (10 as u128).pow(decimals as u32);
             contract.psp22.supply = initial_supply;
             contract._init_with_owner(Self::env().caller());
-            assert!(contract.mint(staking_account, initial_supply * 70 / 100).is_ok());
-            assert!(contract.mint(Self::env().caller(), initial_supply * 30 / 100).is_ok());
+            let _ = contract.mint(Self::env().caller(), initial_supply * 30 / 100);
             contract
         }
         #[ink(message)]
         #[modifiers(only_owner)]
         pub fn mint_to_staking_acc(&mut self, account: AccountId) -> Result<(), PSP22Error> {
-            let supply = (self.psp22.supply as Balance) * 70 / 100;
+            let supply = 1_000_000_000_u128 * 70 / 100;
             self.mint(account, supply as Balance)
         }
     }
 
-    impl PSP22Mintable for StakingToken {
+    impl PSP22Mintable for Token {
         /// override the `mint` function to add the `only_owner` modifier
         #[ink(message)]
         #[modifiers(only_owner)]
