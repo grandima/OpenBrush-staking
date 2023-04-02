@@ -18,11 +18,12 @@ mod staking_contract {
     #[cfg_attr(feature = "std", derive(StorageLayout, scale_info::TypeInfo))]
     struct Record {
         pub staked_amount: Balance,
+        pub initial_timestamp: Timestamp,
         pub staked_at: Timestamp,
     }
     impl Default for Record {
         fn default() -> Self {
-            Self {staked_amount: 0, staked_at: 0}
+            Self {staked_amount: 0, initial_timestamp: 0, staked_at: 0}
         }
     }
 
@@ -61,9 +62,6 @@ mod staking_contract {
             if amount == 0 {
                 return Err(Error::AmountToStakeIsZero);
             }
-            if self._can_stake(amount) {
-
-            }
             let token = self.token_addr;
             let from = self.env().caller();
             let to = self.env().account_id();
@@ -82,7 +80,7 @@ mod staking_contract {
             };
             self.total_staked_amount += final_staked_amount;
             let block_timestamp = self.env().block_timestamp();
-            let record = Record {staked_amount: final_staked_amount, staked_at:  block_timestamp};
+            let record = Record {staked_amount: final_staked_amount, initial_timestamp: block_timestamp, staked_at:  block_timestamp};
             self.stake_info.insert(&from, &record);
             return Ok(());
         }
@@ -122,7 +120,7 @@ mod staking_contract {
             self.stake_info.insert(&account_id, &record);
             Ok(())
         }
-
+        //The computation is very strange here. But it may be adjusted.
         fn _calculate_reward(&self, block_timestamp: Timestamp, initial_timestamp: Timestamp, start_staking_timestamp: Timestamp, share: Balance) -> Balance {
             if initial_timestamp < block_timestamp {
                 return 0;
@@ -135,9 +133,7 @@ mod staking_contract {
             if era_start_timestamp > start_staking_timestamp {
                 start_staking_timestamp = era_start_timestamp;
             }
-            let staking_days = (block_timestamp - era_start_timestamp) / day;
             let mut full_staking_years = era;
-            let left_staking_days = staking_days - full_staking_years * day;
             let mut total_reward = share;
             while full_staking_years != 0 {
                 total_reward /= 2;
@@ -149,9 +145,6 @@ mod staking_contract {
 
         fn _get_record(&self, account_id: AccountId) -> Record {
             self.stake_info.get(&account_id).unwrap_or(Record::default())
-        }
-        fn _can_stake(&self, amount: Balance) -> bool {
-            self.available_reward_amount >= amount
         }
     }
 
