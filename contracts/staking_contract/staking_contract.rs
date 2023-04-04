@@ -49,6 +49,7 @@ mod staking_contract {
 
     impl PSP37 for StakingContract {}
 
+    //To simplify the implementation, StakingContract contains both logic: for staking tokens and for reputation (PSP37).
     #[ink(storage)]
     #[derive(Storage)]
     pub struct StakingContract {
@@ -98,8 +99,8 @@ mod staking_contract {
 
         #[ink(message)]
         pub fn unstake(&mut self) -> Result<(), Error> {
-            let _ = self.claim_reward()?;
-            
+            let result = self.claim_reward()?;
+
             let from = self.env().caller();
             let Some(record) = self.stake_info.get(&from) else {
                 return Err(Error::NoRecord(from))
@@ -154,8 +155,7 @@ mod staking_contract {
             return total_reward;
         }
 
-
-        pub fn claim_reputation(&mut self, account_id: AccountId) {
+        fn claim_reputation(&mut self, account_id: AccountId) {
             let pending_rep = match self.stake_info.get(&account_id) {
                 Some(mut record) => {
                     let block_timestamp = self.env().block_timestamp();
@@ -179,6 +179,10 @@ mod staking_contract {
                 rep_billions /= 10_u128;
                 level += 1;
             }
+            self.mint_reputation_if_necessary(account_id, level);
+        }
+
+        fn mint_reputation_if_necessary(&mut self, account_id: AccountId, level: u128) {
             if self.balance_of(account_id, Some(Id::U128(level))) == 0 {
                 let mut out_vec = Vec::new();
                 out_vec.push((Id::U128(level), 1));
